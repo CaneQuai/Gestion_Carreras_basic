@@ -252,6 +252,64 @@ class ModalCarrera(tk.Toplevel):
         ttk.Button(self, text="Cerrar", command=self.destroy, style="Secondary.TButton").pack(pady=(6, 16), ipadx=24)
 
 
+class ModalBorrarCorredor(tk.Toplevel):
+    def __init__(self, parent, corredores):
+        super().__init__(parent)
+        self.corredores = corredores
+        self.title("Borrar Corredor")
+        self.geometry("680x480")
+        self.resizable(True, True)
+        self.configure(bg=P_BG)
+        self.transient(parent)
+        self.grab_set()
+
+        card(self, "🗑 BORRAR CORREDOR")
+
+        c = ttk.Frame(self, padding=(18, 6))
+        c.pack(fill=tk.BOTH, expand=True)
+
+        cols = ("conductor", "auto", "apuesta")
+        self.tree = ttk.Treeview(c, columns=cols, show="headings", height=14)
+        self.tree.heading("conductor", text="Conductor")
+        self.tree.heading("auto", text="Auto")
+        self.tree.heading("apuesta", text="Apuesta")
+        self.tree.column("conductor", width=240, minwidth=140)
+        self.tree.column("auto", width=240, minwidth=140)
+        self.tree.column("apuesta", width=120, minwidth=80, anchor="e")
+
+        self._refrescar()
+
+        s = ttk.Scrollbar(c, orient=tk.VERTICAL, command=self.tree.yview)
+        self.tree.configure(yscrollcommand=s.set)
+        self.tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        s.pack(side=tk.RIGHT, fill=tk.Y)
+
+        btns = ttk.Frame(self)
+        btns.pack(fill=tk.X, pady=(8, 14))
+        ttk.Button(btns, text="🗑 Borrar seleccionado", command=self.borrar).pack(side=tk.LEFT, padx=(20, 5), expand=True, ipadx=12)
+        ttk.Button(btns, text="Cerrar", command=self.destroy, style="Secondary.TButton").pack(side=tk.RIGHT, padx=(5, 20), expand=True, ipadx=12)
+
+    def _refrescar(self):
+        for row in self.tree.get_children():
+            self.tree.delete(row)
+        for cr in self.corredores:
+            self.tree.insert("", tk.END, values=(cr["conductor"], cr["auto"], f"${cr['apuesta']:.2f}"))
+
+    def borrar(self):
+        sel = self.tree.selection()
+        if not sel:
+            messagebox.showwarning("Selección", "Selecciona un corredor para borrar")
+            return
+        idx = self.tree.index(sel[0])
+        nombre = self.corredores[idx]["conductor"]
+        ok = messagebox.askyesno("Confirmar", f"¿Eliminar a {nombre}?")
+        if not ok:
+            return
+        del self.corredores[idx]
+        self._refrescar()
+        messagebox.showinfo("Eliminado", f"{nombre} ha sido eliminado ✅")
+
+
 class App:
     def __init__(self):
         self.root = tk.Tk()
@@ -275,6 +333,7 @@ class App:
         items = [
             ("🏁 Registrar Corredores", self.registrar, "TButton"),
             ("📋 Ver Corredores", self.ver_corredores, "TButton"),
+            ("🗑 Borrar Corredor", self.borrar_corredor, "TButton"),
             ("🏆 Iniciar Carrera", self.iniciar_carrera, "TButton"),
             ("🚪 Salir", self.root.quit, "Danger.TButton"),
         ]
@@ -292,6 +351,12 @@ class App:
 
     def iniciar_carrera(self):
         ModalCarrera(self.root, self.corredores)
+
+    def borrar_corredor(self):
+        if not self.corredores:
+            messagebox.showinfo("Sin datos", "No hay corredores registrados")
+            return
+        ModalBorrarCorredor(self.root, self.corredores)
 
     def run(self):
         self.root.mainloop()

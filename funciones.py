@@ -1,5 +1,5 @@
 import random
-
+import time 
 def RegistrarCorredor(corredores):
     while True:
         try:
@@ -63,3 +63,23 @@ def IniciarCarrera(corredores):
         print("No hay corredores registrados")
         return None
     return random.choice(corredores)
+
+
+def BorrarCorredor(corredores):
+    if not corredores:
+        print("No hay corredores registrados")
+        return None
+    while True:
+        try:
+
+            print("Ingresa el nombre a elimimar")
+            print("Ingresa 0 para volver al menú")
+            nombre_eliminar = input("")
+
+        except ValueError:
+            print("Ingresa un valor válido")
+
+        if nombre_eliminar == 0:
+            print("Volviendo al menú... ")
+            time.sleep(2)
+            break 
